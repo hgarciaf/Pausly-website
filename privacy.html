@@ -1,39 +1,168 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Privacy Policy - Pausly</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy — Pausly</title>
     <style>
-        body { font-family: -apple-system, sans-serif; max-width: 700px; margin: 50px auto; padding: 0 20px; color: #333; }
-        h1, h2 { color: #6B4EFF; }
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500&family=Inter:wght@300;400;500&display=swap');
+
+        :root {
+            --bg: #fafafa;
+            --ink: #1a1a2e;
+            --body: #555566;
+            --muted: #9595a8;
+            --border: #e4e4ec;
+            --accent: #7F77DD;
+            --accent-deep: #534AB7;
+            --accent-soft: #EEEDFE;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--ink);
+            line-height: 1.8;
+            font-weight: 300;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        nav {
+            padding: 24px 40px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        nav a {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 18px;
+            font-weight: 500;
+            color: var(--ink);
+            text-decoration: none;
+            letter-spacing: 0.03em;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        nav a .dot {
+            width: 6px; height: 6px;
+            background: var(--accent);
+            border-radius: 50%;
+            box-shadow: 0 0 6px rgba(127,119,221,0.2);
+        }
+
+        main {
+            max-width: 640px;
+            margin: 0 auto;
+            padding: 80px 40px 120px;
+        }
+
+        h1 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 32px;
+            font-weight: 400;
+            margin-bottom: 8px;
+        }
+
+        .updated { font-size: 13px; color: var(--muted); margin-bottom: 56px; }
+
+        h2 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 15px;
+            font-weight: 500;
+            margin-top: 48px;
+            margin-bottom: 16px;
+            color: var(--accent-deep);
+        }
+
+        p, li { font-size: 14px; color: var(--body); margin-bottom: 12px; }
+        ul { padding-left: 20px; margin-bottom: 16px; }
+        li { margin-bottom: 6px; }
+
+        code {
+            font-size: 13px;
+            background: var(--accent-soft);
+            padding: 2px 8px;
+            border-radius: 4px;
+            color: var(--accent-deep);
+        }
+
+        strong { font-weight: 500; color: var(--ink); }
+
+        footer {
+            max-width: 640px;
+            margin: 0 auto;
+            padding: 40px;
+            border-top: 1px solid var(--border);
+            text-align: center;
+        }
+
+        footer a {
+            font-size: 13px; color: var(--muted);
+            text-decoration: none; transition: color 0.2s;
+        }
+
+        footer a:hover { color: var(--ink); }
     </style>
 </head>
 <body>
-    <h1>Privacy Policy for Pausly</h1>
-    <p>Last updated: April 26, 2026</p>
 
-    <h2>Overview</h2>
-    <p>Pausly is a focus timer app for macOS. Your privacy is important to us.</p>
+    <nav><a href="index.html">Pausly <span class="dot"></span></a></nav>
 
-    <h2>Data Collection</h2>
-    <p>Pausly does NOT collect, store, or transmit any personal data. All your data stays locally on your Mac.</p>
+    <main>
+        <h1>Privacy Policy</h1>
+        <p class="updated">Last updated: April 8, 2026</p>
 
-    <h2>What Pausly Stores Locally</h2>
-    <ul>
-        <li>Timer session history</li>
-        <li>Focus statistics and streaks</li>
-        <li>Achievement progress</li>
-        <li>App usage data (when tracking is enabled)</li>
-        <li>Your preferences and settings</li>
-    </ul>
-    <p>All of this data is stored in your Mac's Application Support folder and never leaves your device.</p>
+        <h2>Overview</h2>
+        <p>Pausly is a productivity and focus tracking app for macOS that respects your privacy. All your data stays on your Mac. We do not collect, store, or transmit any personal information to external servers.</p>
 
-    <h2>Accessibility Permission</h2>
-    <p>Pausly requests Accessibility permission to track which apps you use during focus sessions. This data is processed locally and is never sent anywhere.</p>
+        <h2>Data Collection</h2>
+        <p>Pausly does <strong>not</strong> collect, store, or transmit any personal data to external servers or third parties.</p>
 
-    <h2>Third-Party Services</h2>
-    <p>Pausly does not use any third-party analytics, advertising, or tracking services.</p>
+        <h2>Local Data Storage</h2>
+        <p>All data is stored locally on your Mac in:</p>
+        <p><code>~/Library/Application Support/PauslyTracker/</code></p>
+        <p>This includes:</p>
+        <ul>
+            <li><strong>Pomodoro session history</strong> &mdash; when you start and complete focus sessions</li>
+            <li><strong>App usage tracking data</strong> &mdash; which apps you use and for how long</li>
+            <li><strong>Tasks and quick notes</strong> &mdash; your personal tasks and captured thoughts</li>
+            <li><strong>Achievements and statistics</strong> &mdash; your progress, streaks, and unlocked achievements</li>
+            <li><strong>Settings and preferences</strong> &mdash; your customization choices</li>
+        </ul>
+        <p>You own all this data. You can access, export, or delete it at any time by navigating to the folder above or deleting it entirely.</p>
 
-    <h2>Contact</h2>
-    <p>For questions about this privacy policy, contact: support@pausly.xyz</p>
+        <h2>Accessibility Permission</h2>
+        <p>Pausly requests accessibility permission to track which applications you are actively using.</p>
+        <p><strong>What we access:</strong></p>
+        <ul>
+            <li>Name of the currently active application</li>
+            <li>Window title of the active application</li>
+        </ul>
+        <p><strong>What we do not do:</strong></p>
+        <ul>
+            <li>We do not record keystrokes</li>
+            <li>We do not capture screenshots</li>
+            <li>We do not access file contents</li>
+            <li>We do not monitor background apps</li>
+        </ul>
+
+        <h2>Notification Permission</h2>
+        <p>Pausly uses notifications to alert you about session progress, break times, and focus milestones. All notification preferences are fully customizable within the app.</p>
+
+        <h2>Third-Party Services</h2>
+        <p>Pausly does not integrate with any third-party services, analytics platforms, or advertising networks. There are no SDKs, trackers, or external calls of any kind.</p>
+
+        <h2>Children's Privacy</h2>
+        <p>Pausly does not collect any personal information from anyone, including children under 13.</p>
+
+        <h2>Contact</h2>
+        <p>If you have questions about this privacy policy, contact us at <strong>support@pausly.xyz</strong></p>
+    </main>
+
+    <footer><a href="index.html">&larr; Back to Pausly</a></footer>
+
 </body>
 </html>

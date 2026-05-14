@@ -1,17 +1,1032 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Pausly - Focus Timer for ADHD</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pausly — Focus timer for minds that wander</title>
+    <meta name="description" content="A minimal Pomodoro focus timer for macOS, designed with ADHD in mind. All data stays on your Mac.">
     <style>
-        body { font-family: -apple-system, sans-serif; max-width: 700px; margin: 50px auto; padding: 0 20px; color: #333; }
-        h1 { color: #6B4EFF; }
-        a { color: #6B4EFF; }
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600&family=Inter:wght@300;400;500&display=swap');
+
+        :root {
+            --bg: #fafafa;
+            --surface: #ffffff;
+            --ink: #1a1a2e;
+            --body: #555566;
+            --muted: #9595a8;
+            --border: #e4e4ec;
+            --accent: #7F77DD;
+            --accent-deep: #534AB7;
+            --accent-soft: #EEEDFE;
+            --accent-glow: rgba(127, 119, 221, 0.12);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--ink);
+            line-height: 1.7;
+            font-weight: 300;
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+        }
+
+        /* --- Constellation canvas --- */
+        .constellation-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* --- Nav --- */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 22px 0;
+            z-index: 100;
+            background: rgba(250, 250, 250, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid transparent;
+            transition: border-color 0.3s;
+        }
+
+        nav.scrolled { border-bottom-color: var(--border); }
+
+        nav .inner {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        nav .logo {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 18px;
+            font-weight: 500;
+            letter-spacing: 0.03em;
+            color: var(--ink);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        nav .logo .dot {
+            width: 7px;
+            height: 7px;
+            background: var(--accent);
+            border-radius: 50%;
+            box-shadow: 0 0 6px var(--accent-glow);
+        }
+
+        nav ul { list-style: none; display: flex; gap: 32px; }
+
+        nav a {
+            text-decoration: none;
+            color: var(--muted);
+            font-size: 13px;
+            font-weight: 400;
+            letter-spacing: 0.03em;
+            transition: color 0.2s;
+        }
+
+        nav a:hover { color: var(--ink); }
+
+        /* --- Hero --- */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 120px 40px 80px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-content { max-width: 620px; }
+
+        /* Constellation hero graphic */
+        .hero-constellation {
+            width: 160px;
+            height: 160px;
+            margin: 0 auto 44px;
+            position: relative;
+        }
+
+        .hero-constellation canvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        .hero h1 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 46px;
+            font-weight: 400;
+            line-height: 1.2;
+            letter-spacing: -0.02em;
+            margin-bottom: 20px;
+            color: var(--ink);
+        }
+
+        .hero h1 em {
+            font-style: normal;
+            color: var(--accent);
+        }
+
+        .hero p {
+            font-size: 16px;
+            color: var(--body);
+            max-width: 420px;
+            margin: 0 auto 14px;
+            line-height: 1.8;
+        }
+
+        .hero .price-tag {
+            font-size: 13px;
+            color: var(--muted);
+            margin-bottom: 36px;
+        }
+
+        .hero .price-tag strong {
+            color: var(--accent-deep);
+            font-weight: 500;
+        }
+
+        .hero .cta-group {
+            display: flex;
+            gap: 14px;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .btn-appstore {
+            display: inline-flex;
+            align-items: center;
+            text-decoration: none;
+            transition: transform 0.2s, box-shadow 0.2s;
+            border-radius: 10px;
+        }
+
+        .btn-appstore img {
+            height: 48px;
+            width: auto;
+            display: block;
+        }
+
+        .btn-appstore:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 24px rgba(83, 74, 183, 0.25);
+        }
+
+        .btn-secondary {
+            padding: 14px 30px;
+            background: none;
+            color: var(--body);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            font-size: 14px;
+            text-decoration: none;
+            transition: border-color 0.2s, color 0.2s;
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--accent);
+            color: var(--accent-deep);
+        }
+
+        /* --- Divider --- */
+        .divider {
+            width: 1px;
+            height: 72px;
+            background: var(--border);
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* --- Section --- */
+        section {
+            padding: 100px 40px;
+            max-width: 1000px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .section-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.18em;
+            color: var(--accent);
+            margin-bottom: 14px;
+            font-weight: 500;
+        }
+
+        .section-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 28px;
+            font-weight: 400;
+            margin-bottom: 52px;
+            color: var(--ink);
+        }
+
+        /* --- How constellations form --- */
+        .constellation-explainer {
+            text-align: center;
+            padding: 100px 40px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .constellation-explainer p.intro {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 20px;
+            font-weight: 300;
+            color: var(--body);
+            max-width: 480px;
+            margin: 0 auto 60px;
+            line-height: 1.7;
+        }
+
+        .steps {
+            display: flex;
+            gap: 48px;
+            justify-content: center;
+            align-items: flex-start;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .step {
+            flex: 1;
+            text-align: center;
+        }
+
+        .step-visual {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 24px;
+            position: relative;
+        }
+
+        .step-visual canvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        .step-connector {
+            flex: 0 0 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding-top: 48px;
+            color: var(--muted);
+            font-size: 18px;
+        }
+
+        .step h3 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 15px;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: var(--ink);
+        }
+
+        .step p {
+            font-size: 13px;
+            color: var(--muted);
+            line-height: 1.7;
+        }
+
+        /* --- Features --- */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+        }
+
+        .feature {
+            padding: 28px;
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .feature:hover {
+            border-color: var(--accent);
+            box-shadow: 0 4px 20px var(--accent-glow);
+        }
+
+        .feature-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent);
+            margin-bottom: 20px;
+            box-shadow: 0 0 8px var(--accent-glow);
+        }
+
+        .feature h3 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 15px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .feature p {
+            font-size: 13px;
+            color: var(--body);
+            line-height: 1.8;
+        }
+
+        /* --- Screenshot --- */
+        .screenshot-section {
+            padding: 80px 40px;
+            max-width: 1100px;
+            margin: 0 auto;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .screenshot-frame {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            margin-top: 48px;
+        }
+
+        .screenshot-frame img {
+            width: 100%;
+            border-radius: 10px;
+        }
+
+        .screenshot-placeholder {
+            padding: 120px 40px;
+            color: var(--muted);
+            font-size: 14px;
+            font-style: italic;
+        }
+
+        /* --- Presets --- */
+        .presets {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 56px;
+        }
+
+        .presets-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+        }
+
+        .preset-card {
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 28px 20px;
+            text-align: center;
+            transition: border-color 0.3s, transform 0.3s, box-shadow 0.3s;
+            background: var(--bg);
+        }
+
+        .preset-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px var(--accent-glow);
+        }
+
+        .preset-card .preset-emoji { font-size: 28px; margin-bottom: 14px; display: block; }
+
+        .preset-card h4 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .preset-card p { font-size: 12px; color: var(--muted); }
+
+        .preset-card .timing {
+            font-size: 22px;
+            font-weight: 300;
+            color: var(--accent-deep);
+            margin-top: 12px;
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        /* --- Privacy --- */
+        .privacy-section {
+            text-align: center;
+            padding: 100px 40px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .privacy-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 28px;
+            border: 1px solid var(--border);
+            border-radius: 60px;
+            margin-bottom: 28px;
+            background: var(--accent-soft);
+        }
+
+        .privacy-badge .lock { font-size: 16px; }
+        .privacy-badge span { font-size: 14px; font-weight: 400; color: var(--accent-deep); }
+
+        .privacy-section > p {
+            font-size: 15px;
+            color: var(--body);
+            max-width: 440px;
+            margin: 0 auto;
+            line-height: 1.8;
+        }
+
+        /* --- Story --- */
+        .story {
+            text-align: center;
+            padding: 100px 40px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .story > p {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 17px;
+            font-weight: 300;
+            color: var(--body);
+            max-width: 500px;
+            margin: 0 auto;
+            line-height: 1.9;
+        }
+
+        /* --- FAQ --- */
+        .faq-list { max-width: 600px; }
+
+        .faq-item {
+            border-bottom: 1px solid var(--border);
+            padding: 28px 0;
+        }
+
+        .faq-item:first-child { border-top: 1px solid var(--border); }
+
+        .faq-item h4 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 15px;
+            font-weight: 400;
+            margin-bottom: 8px;
+        }
+
+        .faq-item p { font-size: 14px; color: var(--body); line-height: 1.7; }
+
+        /* --- Footer --- */
+        footer {
+            padding: 60px 40px;
+            max-width: 1000px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid var(--border);
+            position: relative;
+            z-index: 1;
+        }
+
+        footer .left {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--ink);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        footer .left .dot {
+            width: 5px; height: 5px; background: var(--accent);
+            border-radius: 50%; box-shadow: 0 0 6px var(--accent-glow);
+        }
+
+        footer .right { display: flex; gap: 24px; }
+
+        footer a {
+            font-size: 13px;
+            color: var(--muted);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        footer a:hover { color: var(--ink); }
+
+        .copy {
+            font-size: 12px;
+            color: var(--muted);
+            text-align: center;
+            padding: 0 40px 40px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* --- Animations --- */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+
+        .fade-in.visible { opacity: 1; transform: translateY(0); }
+
+        /* --- Responsive --- */
+        @media (max-width: 900px) {
+            .features-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 34px; }
+            .hero .cta-group { flex-direction: column; }
+            .features-grid { grid-template-columns: 1fr; gap: 12px; }
+            .presets-grid { grid-template-columns: repeat(2, 1fr); }
+            .presets { padding: 36px 20px; }
+            section { padding: 80px 24px; }
+            footer { flex-direction: column; gap: 24px; text-align: center; }
+            footer .right { justify-content: center; }
+            .steps { flex-direction: column; gap: 32px; }
+            .step-connector { display: none; }
+            nav ul { gap: 20px; }
+        }
+
+        @media (max-width: 480px) {
+            .presets-grid { grid-template-columns: 1fr; }
+            nav .inner { padding: 0 20px; }
+        }
     </style>
 </head>
 <body>
-    <h1>Pausly</h1>
-    <p>A smart focus timer designed with ADHD in mind.</p>
-    <p><a href="privacy.html">Privacy Policy</a></p>
-    <p>Contact: support@pausly.xyz</p>
+
+    <!-- Background constellations -->
+    <canvas class="constellation-bg" id="bgCanvas"></canvas>
+
+    <!-- Navigation -->
+    <nav id="nav">
+        <div class="inner">
+            <a href="#" class="logo">Pausly <span class="dot"></span></a>
+            <ul>
+                <li><a href="#features">Features</a></li>
+                <li><a href="#presets">Presets</a></li>
+                <li><a href="#faq">FAQ</a></li>
+                <li><a href="#privacy">Privacy</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero">
+        <div class="hero-content fade-in">
+            <div class="hero-constellation">
+                <canvas id="heroConstellation" width="320" height="320"></canvas>
+            </div>
+            <h1>Every session<br>becomes a <em>star</em></h1>
+            <p>A quiet Pomodoro timer for macOS. Built for minds that wander.</p>
+            <p class="price-tag"><strong>$0.99</strong> &middot; one-time &middot; no subscriptions</p>
+            <div class="cta-group">
+                <a href="https://apps.apple.com/us/app/pausly-focus-timer-for-adhd/id6763488509" class="btn-appstore" target="_blank" rel="noopener">
+                    <img src="https://tools.applemediaservices.com/api/badges/download-on-the-mac-app-store/black/en-us?size=250x83" alt="Download on the Mac App Store">
+                </a>
+                <a href="#features" class="btn-secondary">Learn more</a>
+            </div>
+        </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- How constellations form -->
+    <div class="constellation-explainer fade-in">
+        <p class="section-label">How it works</p>
+        <p class="intro">Focus. Earn stars. Watch constellations form.</p>
+        <div class="steps">
+            <div class="step">
+                <div class="step-visual"><canvas id="step1" width="240" height="240"></canvas></div>
+                <h3>Start</h3>
+                <p>Pick a session. Focus.</p>
+            </div>
+            <div class="step-connector">&rarr;</div>
+            <div class="step">
+                <div class="step-visual"><canvas id="step2" width="240" height="240"></canvas></div>
+                <h3>Earn</h3>
+                <p>Each session lights a star.</p>
+            </div>
+            <div class="step-connector">&rarr;</div>
+            <div class="step">
+                <div class="step-visual"><canvas id="step3" width="240" height="240"></canvas></div>
+                <h3>Grow</h3>
+                <p>Stars connect into patterns.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Features -->
+    <section id="features" class="fade-in">
+        <p class="section-label">Features</p>
+        <h2 class="section-title">Simple tools, deep focus</h2>
+        <div class="features-grid">
+            <div class="feature">
+                <div class="feature-dot"></div>
+                <h3>Focus timer</h3>
+                <p>Customizable sessions and breaks. Start, focus, rest.</p>
+            </div>
+            <div class="feature">
+                <div class="feature-dot"></div>
+                <h3>Gentle nudges</h3>
+                <p>A soft warning when you drift &mdash; never a wall.</p>
+            </div>
+            <div class="feature">
+                <div class="feature-dot"></div>
+                <h3>Pattern insights</h3>
+                <p>See where your time goes. Learn without judgment.</p>
+            </div>
+            <div class="feature">
+                <div class="feature-dot"></div>
+                <h3>Earned streaks</h3>
+                <p>Constellations that grow with every session.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Screenshot -->
+    <div class="screenshot-section fade-in">
+        <p class="section-label">Interface</p>
+        <h2 class="section-title">Your mission control</h2>
+        <div class="screenshot-frame">
+            <img src="screenshot.png" alt="Pausly app interface — Pomodoro timer with today's progress and focus technique overview">
+        </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Presets -->
+    <section id="presets" class="fade-in">
+        <p class="section-label">Presets</p>
+        <h2 class="section-title">Find your orbit</h2>
+        <div class="presets">
+            <div class="presets-grid">
+                <div class="preset-card">
+                    <span class="preset-emoji">&#127813;</span>
+                    <h4>Classic Pomodoro</h4>
+                    <p>The original technique</p>
+                    <div class="timing">25 / 5 / 15</div>
+                </div>
+                <div class="preset-card">
+                    <span class="preset-emoji">&#9889;</span>
+                    <h4>Short Sprints</h4>
+                    <p>Quick bursts of energy</p>
+                    <div class="timing">15 / 3 / 10</div>
+                </div>
+                <div class="preset-card">
+                    <span class="preset-emoji">&#127756;</span>
+                    <h4>Deep Focus</h4>
+                    <p>Extended flow sessions</p>
+                    <div class="timing">50 / 10 / 30</div>
+                </div>
+                <div class="preset-card">
+                    <span class="preset-emoji">&#129504;</span>
+                    <h4>ADHD Friendly</h4>
+                    <p>Gentle, frequent breaks</p>
+                    <div class="timing">15 / 5 / 15</div>
+                </div>
+            </div>
+            <p style="text-align: center; margin-top: 28px; font-size: 12px; color: var(--muted);">
+                focus / short break / long break &mdash; in minutes
+            </p>
+        </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- Privacy -->
+    <section id="privacy" class="privacy-section fade-in">
+        <div class="privacy-badge">
+            <span class="lock">&#128274;</span>
+            <span>Your data never leaves your Mac</span>
+        </div>
+        <p>
+            No accounts. No cloud. No analytics. No tracking pixels.
+            Everything is stored locally in your Application Support folder.
+            You own your data completely.
+        </p>
+        <br><br>
+        <a href="privacy.html" style="color: var(--muted); font-size: 13px; text-decoration: underline;">Read full privacy policy</a>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- FAQ -->
+    <section id="faq" class="fade-in">
+        <p class="section-label">Frequently asked</p>
+        <h2 class="section-title">Common questions</h2>
+        <div class="faq-list">
+            <div class="faq-item">
+                <h4>How much does Pausly cost?</h4>
+                <p>$0.99, one-time purchase. No subscriptions, no in-app purchases. Pay once, own it forever.</p>
+            </div>
+            <div class="faq-item">
+                <h4>Does it collect my data?</h4>
+                <p>No. All data is stored locally on your Mac. Nothing is ever sent to external servers. No accounts required.</p>
+            </div>
+            <div class="faq-item">
+                <h4>Why does it need Accessibility permission?</h4>
+                <p>To detect which app you're currently using, so it can track your time and power the Distraction Guard feature. It does not record keystrokes, capture screenshots, or access file contents.</p>
+            </div>
+            <div class="faq-item">
+                <h4>Which macOS versions are supported?</h4>
+                <p>Pausly requires macOS 14 (Sonoma) or later.</p>
+            </div>
+            <div class="faq-item">
+                <h4>How do I delete my data?</h4>
+                <p>Delete the folder at ~/Library/Application Support/PauslyTracker/. Uninstalling the app alone does not remove your data.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="left">Pausly <span class="dot"></span></div>
+        <div class="right">
+            <a href="privacy.html">Privacy</a>
+            <a href="mailto:support@pausly.xyz">Contact</a>
+        </div>
+    </footer>
+    <p class="copy">&copy; 2026 Pausly. Every session is a star.</p>
+
+    <script>
+        // --- Colors ---
+        const ACCENT = '#7F77DD';
+        const ACCENT_SOFT = 'rgba(127, 119, 221, 0.12)';
+        const ACCENT_LINE = 'rgba(127, 119, 221, 0.18)';
+        const STAR_COLOR = 'rgba(127, 119, 221, 0.35)';
+        const DOT_COLOR = 'rgba(127, 119, 221, 0.55)';
+
+        // --- Background constellation field ---
+        const bgCanvas = document.getElementById('bgCanvas');
+        const bgCtx = bgCanvas.getContext('2d');
+        let bgStars = [];
+        let bgConstellations = [];
+        let mouseX = -1000, mouseY = -1000;
+
+        function resizeBg() {
+            bgCanvas.width = window.innerWidth;
+            bgCanvas.height = document.documentElement.scrollHeight;
+            generateBg();
+        }
+
+        function generateBg() {
+            bgStars = [];
+            bgConstellations = [];
+            const starCount = Math.floor((bgCanvas.width * bgCanvas.height) / 32000);
+            for (let i = 0; i < starCount; i++) {
+                bgStars.push({
+                    x: Math.random() * bgCanvas.width,
+                    y: Math.random() * bgCanvas.height,
+                    r: Math.random() * 1.4 + 0.6,
+                    alpha: Math.random() * 0.35 + 0.25,
+                    phase: Math.random() * Math.PI * 2,
+                    speed: Math.random() * 0.4 + 0.2
+                });
+            }
+        }
+
+        function drawBg() {
+            bgCtx.clearRect(0, 0, bgCanvas.width, bgCanvas.height);
+            const t = Date.now() * 0.001;
+            const sy = window.scrollY;
+
+            // Stars
+            bgStars.forEach(s => {
+                const twinkle = Math.sin(t * s.speed + s.phase) * 0.15 + 0.85;
+                bgCtx.beginPath();
+                bgCtx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+                bgCtx.fillStyle = `rgba(83, 74, 183, ${s.alpha * twinkle})`;
+                bgCtx.fill();
+            });
+
+            // Mouse proximity glow
+            const mx = mouseX, my = mouseY + sy;
+            bgStars.forEach(s => {
+                const dx = s.x - mx, dy = s.y - my;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < 140) {
+                    const intensity = (1 - dist / 140) * 0.7;
+                    bgCtx.beginPath();
+                    bgCtx.arc(s.x, s.y, s.r + 2, 0, Math.PI * 2);
+                    bgCtx.fillStyle = `rgba(83, 74, 183, ${intensity})`;
+                    bgCtx.fill();
+                }
+            });
+
+            requestAnimationFrame(drawBg);
+        }
+
+        window.addEventListener('resize', resizeBg);
+        window.addEventListener('mousemove', e => { mouseX = e.clientX; mouseY = e.clientY; });
+        resizeBg();
+        drawBg();
+
+        // --- Hero constellation animation (builds up) ---
+        const heroC = document.getElementById('heroConstellation');
+        const heroCtx = heroC.getContext('2d');
+        const heroPoints = [
+            { x: 160, y: 40 },
+            { x: 240, y: 90 },
+            { x: 280, y: 180 },
+            { x: 200, y: 260 },
+            { x: 100, y: 240 },
+            { x: 60, y: 150 },
+            { x: 120, y: 100 },
+            { x: 160, y: 160 }
+        ];
+        const heroLines = [[0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[6,0],[6,7],[7,2],[7,4]];
+
+        function drawHero() {
+            heroCtx.clearRect(0, 0, 320, 320);
+            const t = Date.now() * 0.001;
+            const progress = (Math.sin(t * 0.3) * 0.5 + 0.5);
+            const visiblePts = Math.floor(progress * heroPoints.length) + 3;
+
+            // Lines
+            heroLines.forEach(([a, b]) => {
+                if (a < visiblePts && b < visiblePts) {
+                    const lineAlpha = Math.min(1, (visiblePts - Math.max(a, b)) / 2) * 0.55;
+                    heroCtx.beginPath();
+                    heroCtx.moveTo(heroPoints[a].x, heroPoints[a].y);
+                    heroCtx.lineTo(heroPoints[b].x, heroPoints[b].y);
+                    heroCtx.strokeStyle = `rgba(83, 74, 183, ${lineAlpha})`;
+                    heroCtx.lineWidth = 1.2;
+                    heroCtx.stroke();
+                }
+            });
+
+            // Stars
+            for (let i = 0; i < Math.min(visiblePts, heroPoints.length); i++) {
+                const p = heroPoints[i];
+                const pulse = Math.sin(t * 2 + i) * 0.3 + 0.7;
+                // Glow
+                heroCtx.beginPath();
+                heroCtx.arc(p.x, p.y, 10, 0, Math.PI * 2);
+                heroCtx.fillStyle = `rgba(83, 74, 183, ${0.18 * pulse})`;
+                heroCtx.fill();
+                // Star dot
+                heroCtx.beginPath();
+                heroCtx.arc(p.x, p.y, 3.5, 0, Math.PI * 2);
+                heroCtx.fillStyle = `rgba(83, 74, 183, ${0.95 * pulse})`;
+                heroCtx.fill();
+            }
+
+            requestAnimationFrame(drawHero);
+        }
+        drawHero();
+
+        // --- Step canvases ---
+        function drawStep1() {
+            const c = document.getElementById('step1');
+            const ctx = c.getContext('2d');
+            const t = Date.now() * 0.001;
+            ctx.clearRect(0, 0, 240, 240);
+
+            // Single pulsing star (one session)
+            const pulse = Math.sin(t * 2) * 0.3 + 0.7;
+            // Glow ring
+            ctx.beginPath();
+            ctx.arc(120, 120, 24, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(83, 74, 183, ${0.15 * pulse})`;
+            ctx.fill();
+            // Outer ring
+            ctx.beginPath();
+            ctx.arc(120, 120, 16, 0, Math.PI * 2);
+            ctx.strokeStyle = `rgba(83, 74, 183, ${0.5 * pulse})`;
+            ctx.lineWidth = 1.2;
+            ctx.stroke();
+            // Core
+            ctx.beginPath();
+            ctx.arc(120, 120, 5, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(83, 74, 183, ${0.95 * pulse})`;
+            ctx.fill();
+            // Timer arc
+            const arcProgress = (t * 0.4) % 1;
+            ctx.beginPath();
+            ctx.arc(120, 120, 32, -Math.PI/2, -Math.PI/2 + arcProgress * Math.PI * 2);
+            ctx.strokeStyle = `rgba(83, 74, 183, 0.4)`;
+            ctx.lineWidth = 1.8;
+            ctx.stroke();
+
+            requestAnimationFrame(drawStep1);
+        }
+
+        function drawStep2() {
+            const c = document.getElementById('step2');
+            const ctx = c.getContext('2d');
+            const t = Date.now() * 0.001;
+            ctx.clearRect(0, 0, 240, 240);
+
+            // Multiple stars appearing
+            const stars = [
+                {x: 80, y: 100}, {x: 150, y: 70}, {x: 170, y: 150},
+                {x: 100, y: 170}, {x: 130, y: 120}
+            ];
+            const visible = Math.floor((t * 0.5) % 6) + 1;
+            for (let i = 0; i < Math.min(visible, stars.length); i++) {
+                const s = stars[i];
+                const p = Math.sin(t * 1.5 + i * 1.2) * 0.3 + 0.7;
+                ctx.beginPath();
+                ctx.arc(s.x, s.y, 11, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(83, 74, 183, ${0.15 * p})`;
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(s.x, s.y, 4, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(83, 74, 183, ${0.9 * p})`;
+                ctx.fill();
+            }
+
+            requestAnimationFrame(drawStep2);
+        }
+
+        function drawStep3() {
+            const c = document.getElementById('step3');
+            const ctx = c.getContext('2d');
+            const t = Date.now() * 0.001;
+            ctx.clearRect(0, 0, 240, 240);
+
+            const pts = [
+                {x: 70, y: 80}, {x: 140, y: 55}, {x: 180, y: 110},
+                {x: 160, y: 180}, {x: 90, y: 170}, {x: 120, y: 120}
+            ];
+            const lines = [[0,1],[1,2],[2,3],[3,4],[4,0],[0,5],[2,5],[4,5]];
+            const lineProgress = ((t * 0.3) % 1);
+            const visibleLines = Math.floor(lineProgress * lines.length) + 2;
+
+            // Lines
+            for (let i = 0; i < Math.min(visibleLines, lines.length); i++) {
+                const [a, b] = lines[i];
+                const alpha = 0.5;
+                ctx.beginPath();
+                ctx.moveTo(pts[a].x, pts[a].y);
+                ctx.lineTo(pts[b].x, pts[b].y);
+                ctx.strokeStyle = `rgba(83, 74, 183, ${alpha})`;
+                ctx.lineWidth = 1.2;
+                ctx.stroke();
+            }
+
+            // Stars
+            pts.forEach((p, i) => {
+                const pulse = Math.sin(t * 1.8 + i * 0.8) * 0.2 + 0.8;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, 11, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(83, 74, 183, ${0.15 * pulse})`;
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(83, 74, 183, ${0.95 * pulse})`;
+                ctx.fill();
+            });
+
+            requestAnimationFrame(drawStep3);
+        }
+
+        drawStep1();
+        drawStep2();
+        drawStep3();
+
+        // --- Scroll reveal ---
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) entry.target.classList.add('visible');
+            });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+        window.addEventListener('scroll', () => {
+            document.getElementById('nav').classList.toggle('scrolled', window.scrollY > 20);
+        });
+    </script>
+
 </body>
 </html>
